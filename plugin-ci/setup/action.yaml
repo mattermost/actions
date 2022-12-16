@@ -1,0 +1,48 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost-plugin/setup"
+description: |
+  This action used to setup the CI env for Mattermost Plugins
+
+  **Note**
+  Note that if an `.nvmrc` file is present in the plugin project's root
+  directory, this file will be used to determine what version of node to install for CI.
+
+inputs:
+  node-version:
+    default: v0.35.1
+    description: |
+      The version to use for Node
+    required: false
+
+  golangci-lint-version:
+    default: 1.49.0
+    description: |
+      The version to use for golangci-lint
+    required: false
+
+  gobin:
+    default: $GOPATH/bin
+    description: |
+      The golang bin path
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Node
+      shell: bash
+      run: |
+        set +e
+        wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/${{ inputs.node-version }}/install.sh | bash
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        nvm install || nvm install 13.14  # use `.nvmrc` if it exists, otherwise use 13.14
+        nvm alias default $(node --version)
+
+        echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+        echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+
+    - name: Install golangci-lint
+      shell: bash
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${{ inputs.gobin }} ${{ inputs.golangci-lint-version }}
