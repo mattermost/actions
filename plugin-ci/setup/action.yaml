@@ -30,14 +30,9 @@ runs:
   using: "composite"
   steps:
     - name: Install Node
-      shell: bash
-      run: |
-        set +e
-        wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/${{ inputs.node-version }}/install.sh | bash
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        nvm install || nvm install 13.14  # use `.nvmrc` if it exists, otherwise use 13.14
-        nvm alias default $(node --version)
+      uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # v3.5.1
+      with:
+        node-version: ${{ inputs.node-version }}
 
     - name: Install golangci-lint
       shell: bash
