@@ -39,9 +39,6 @@ runs:
         nvm install || nvm install 13.14  # use `.nvmrc` if it exists, otherwise use 13.14
         nvm alias default $(node --version)
 
-        echo 'export NVM_DIR="$HOME/.nvm"' >> $GITHUB_ENV
-        echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"<<EOF' >> $GITHUB_ENV
-
     - name: Install golangci-lint
       shell: bash
       run: |
