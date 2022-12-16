@@ -42,4 +42,5 @@ runs:
     - name: Install golangci-lint
       shell: bash
       run: |
-        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${{ inputs.gobin }} ${{ inputs.golangci-lint-version }}
+        set +e
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${{ inputs.gobin }}/ ${{ inputs.golangci-lint-version }}
