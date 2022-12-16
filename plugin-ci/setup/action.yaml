@@ -40,7 +40,7 @@ runs:
         nvm alias default $(node --version)
 
         echo 'export NVM_DIR="$HOME/.nvm"' >> $GITHUB_ENV
-        echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $GITHUB_ENV
+        echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"<<EOF' >> $GITHUB_ENV
 
     - name: Install golangci-lint
       shell: bash
