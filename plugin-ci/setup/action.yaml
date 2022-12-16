@@ -20,12 +20,6 @@ inputs:
       The version to use for golangci-lint
     required: false
 
-  gobin:
-    default: $GOPATH/bin
-    description: |
-      The golang bin path
-    required: false
-
 runs:
   using: "composite"
   steps:
@@ -43,4 +37,4 @@ runs:
       shell: bash
       run: |
         set +e
-        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${{ inputs.gobin }}/ ${{ inputs.golangci-lint-version }}
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin ${{ inputs.golangci-lint-version }}
