@@ -8,12 +8,6 @@ description: |
   directory, this file will be used to determine what version of node to install for CI.
 
 inputs:
-  node-version:
-    default: v0.35.1
-    description: |
-      The version to use for Node
-    required: false
-
   golangci-lint-version:
     default: v1.49.0
     description: |
