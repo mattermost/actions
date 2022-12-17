@@ -1,5 +1,5 @@
 # Copyright 2022 Mattermost, Inc.
-name: "mattermost-plugin/setup"
+name: "plugin-ci/setup"
 description: |
   This action used to setup the CI env for Mattermost Plugins
 
@@ -18,12 +18,6 @@ inputs:
     default: v1.49.0
     description: |
       The version to use for golangci-lint
-    required: false
-
-  gobin:
-    default: $GOPATH/bin
-    description: |
-      The golang bin path
     required: false
 
 runs:

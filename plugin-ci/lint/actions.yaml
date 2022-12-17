@@ -1,0 +1,29 @@
+# Copyright 2022 Mattermost, Inc.
+name: "plugin-ci/lint"
+description: |
+  This action used to run the CI lint workflow for Mattermost Plugins.
+
+runs:
+  using: "composite"
+  steps:
+    - name: ci/check-style
+      shell: bash
+      run: make check-style
+
+    - name: ci/tidy-mod
+      shell: bash
+      run: go mod tidy -v
+
+    - name: ci/diff-mod
+      shell: bash
+      run: |
+        git --no-pager diff --exit-code go.mod go.sum || (echo "Please run \"go mod tidy\" and commit the changes in go.mod and go.sum." && exit 1)
+
+    - name: ci/apply
+      shell: bash
+      run: make apply
+
+    - name: ci/diff-manifests
+      shell: bash
+      run: |
+        git --no-pager diff --exit-code *manifest.* || (echo "Please run \"make apply\" and commit the changes in the generated manifests." && exit 1)
