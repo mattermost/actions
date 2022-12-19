@@ -26,4 +26,4 @@ runs:
     - name: ci/artifact-upload
       shell: bash
       run: |
-        aws s3 sync ${{ inputs.artifacts }} s3://${{ inputs.bucket }}
+        aws s3 cp ${{ inputs.artifacts }} s3://${{ inputs.bucket }} --acl public-read --cache-control no-cache
