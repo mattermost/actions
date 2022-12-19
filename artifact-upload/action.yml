@@ -1,0 +1,29 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost/artifact-upload"
+description: |
+  This action used to run the CD artifcat upload
+
+inputs:
+  artifacts:
+    description: |
+      The path or files of artifacts to upload
+    required: true
+  bucket:
+    description: |
+      The S3 bucket full path to upload
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: ci/aws-configure
+      uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838 # v1.7.0
+      with:
+        aws-region: ${{ inputs.aws-region }}
+        aws-access-key-id: ${{ secrets.RELEASE_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.RELEASE_AWS_SECRET_ACCESS_KEY }}
+
+    - name: ci/artifact-upload
+      shell: bash
+      run: |
+        aws s3 sync ${{ inputs.artifacts }} s3://${{ inputs.bucket }}
