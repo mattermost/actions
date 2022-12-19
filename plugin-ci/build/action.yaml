@@ -26,5 +26,5 @@ runs:
       with:
         name: dist
         path: |
-          - "*.tar.gz"
-          - "release-notes.md"
+          - "dist/*.tar.gz"
+          - "dist/release-notes.md"
