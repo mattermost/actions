@@ -20,8 +20,8 @@ runs:
       uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838 # v1.7.0
       with:
         aws-region: ${{ inputs.aws-region }}
-        aws-access-key-id: ${{ secrets.RELEASE_AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.RELEASE_AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ secrets.PLUGIN_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.PLUGIN_AWS_SECRET_ACCESS_KEY }}
 
     - name: ci/artifact-upload
       shell: bash
