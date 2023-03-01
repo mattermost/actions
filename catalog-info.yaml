@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: actions
+  annotations:
+    github.com/project-slug: mattermost/actions
+spec:
+  type: "ci/cd"
+  owner: "core-build-engineers"
+  system: "delivery-infrastructure"
+  subcomponentOf: "actions-workflows"
