@@ -5,7 +5,7 @@ metadata:
   annotations:
     github.com/project-slug: mattermost/actions
 spec:
-  lifecycle: "prouction"
+  lifecycle: "production"
   owner: "core-build-engineers"
   type: "ci/cd"
   subcomponentOf: "actions-workflows"
