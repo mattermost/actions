@@ -5,7 +5,8 @@ metadata:
   annotations:
     github.com/project-slug: mattermost/actions
 spec:
-  type: "ci/cd"
+  lifecycle: "production"
   owner: "core-build-engineers"
-  system: "delivery-infrastructure"
+  type: "ci/cd"
   subcomponentOf: "actions-workflows"
+  system: "delivery-infrastructure"
