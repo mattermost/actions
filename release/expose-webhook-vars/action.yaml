@@ -1,0 +1,38 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost/expose-webhook-vars"
+description: "An action that exports webhook information as fixed environment variables to be used with the rest of the pipeline"
+
+inputs:
+  payload: # https://github.com/mattermost/release-bot/blob/5985e3b738218097e227ccbb32859cedac825d4b/server/github_hook_handler.go#L156
+    description: "The triggerer payload"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: ci/export-payload-environment-vars
+      uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+      with:
+        script: |
+          var payload = core.getInput('payload', { required: true });
+
+          try {
+            var vars = JSON.parse(payload);
+
+            core.exportVariable("TRIGGERER_EVENT", vars.event);
+            switch (vars.event) {
+              case "push":
+                core.exportVariable("TRIGGERER_BRANCH", vars.eventPayload.ref.split("/")[2]);
+                break;
+              case "workflow_run":
+                core.exportVariable("TRIGGERER_BRANCH", vars.eventPayload.head_branch);
+                break;
+            }
+            core.exportVariable("TRIGGERER_COMMIT_SHA", vars.eventPayload.head_commit.id);
+            core.exportVariable("TRIGGERER_REPO_NAME", vars.eventPayload.repository.name);
+            core.exportVariable("TRIGGERER_REPO_FULL_NAME", vars.eventPayload.repository.full_name);
+
+            core.info("All variables exposed successfully");
+          } catch (err) {
+            core.setFailed(`Action failed with error ${err}`);
+          }
