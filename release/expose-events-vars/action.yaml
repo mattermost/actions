@@ -17,27 +17,34 @@ runs:
       with:
         script: |
           try {
-            var vars = JSON.parse(process.env.PAYLOAD);
+            var payload = JSON.parse(process.env.PAYLOAD);
 
-            core.exportVariable("TRIGGERER_EVENT", vars.X-GitHub-Event);
-            switch (vars.X-GitHub-Event) {
+            if (payload.hasOwnProperty("X-GitHub-Event")) {
+              var githubEvent = payload["X-GitHub-Event"];
+            } else {
+              throw "X-GitHub-Event property does not exist in the incoming payload. Check the PAYLOAD environment for details."
+            }
+
+            core.info(`Incoming event is ${githubEvent}`);
+            core.exportVariable("TRIGGERER_EVENT", githubEvent);
+            switch (githubEvent) {
               case "push":
-                core.exportVariable("TRIGGERER_BRANCH", vars.ref.split("/")[2]);
-                core.exportVariable("TRIGGERER_COMMIT_SHA", vars.head_commit.id);
+                core.exportVariable("TRIGGERER_BRANCH", payload.ref.split("/")[2]);
+                core.exportVariable("TRIGGERER_COMMIT_SHA", payload.head_commit.id);
                 break;
               case "workflow_run":
-                core.exportVariable("TRIGGERER_BRANCH", vars.workflow_run.head_branch);
-                core.exportVariable("TRIGGERER_COMMIT_SHA", vars.workflow_run.head_commit.id);
+                core.exportVariable("TRIGGERER_BRANCH", payload.workflow_run.head_branch);
+                core.exportVariable("TRIGGERER_COMMIT_SHA", payload.workflow_run.head_commit.id);
                 break;
               case "pull_request":
-                core.exportVariable("TRIGGERER_BRANCH", vars.pull_request.head.ref);
-                core.exportVariable("TRIGGERER_COMMIT_SHA", vars.pull_request.head.sha);
+                core.exportVariable("TRIGGERER_BRANCH", payload.pull_request.head.ref);
+                core.exportVariable("TRIGGERER_COMMIT_SHA", payload.pull_request.head.sha);
                 break;
             }
-            core.exportVariable("TRIGGERER_REPO_NAME", vars.repository.name);
-            core.exportVariable("TRIGGERER_REPO_FULL_NAME", vars.repository.full_name);
+            core.exportVariable("TRIGGERER_REPO_NAME", payload.repository.name);
+            core.exportVariable("TRIGGERER_REPO_FULL_NAME", payload.repository.full_name);
 
             core.info("All variables exposed successfully");
           } catch (err) {
-            core.setFailed(`Action failed with error ${err}`);
+            core.setFailed(`Action failed with error: ${err}`);
           }
