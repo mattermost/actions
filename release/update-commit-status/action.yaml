@@ -33,11 +33,17 @@ runs:
         CONTEXT: ${{ inputs.context }}
         DESCRIPTION: ${{ inputs.description }}
         STATUS: ${{ inputs.status }}
-        TARGET_URL: ${{ inputs.target_url || ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} }}
+        TARGET_URL: ${{ inputs.target_url }}
       with:
         script: |
           try {
-            const { REPOSITORY_FULL_NAME, SHA, CONTEXT, DESCRIPTION, STATUS, TARGET_URL } = process.env
+            const { REPOSITORY_FULL_NAME, SHA, CONTEXT, DESCRIPTION, STATUS } = process.env
+            if(process.env.TARGET_URL) { 
+                const TARGET_URL = process.env.TARGET_URL
+            }
+            else { 
+                const TARGET_URL = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
 
             await github.rest.repos.createCommitStatus({
               owner: REPOSITORY_FULL_NAME.split["/"][0],
