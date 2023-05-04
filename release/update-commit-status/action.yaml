@@ -34,6 +34,7 @@ runs:
         DESCRIPTION: ${{ inputs.description }}
         STATUS: ${{ inputs.status }}
       with:
+        github-token: ${{ env.GITHUB_TOKEN }}
         script: |
           try {
             var { REPOSITORY_FULL_NAME, SHA, CONTEXT, DESCRIPTION, STATUS } = process.env;
