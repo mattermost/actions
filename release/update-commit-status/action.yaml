@@ -33,27 +33,27 @@ runs:
         CONTEXT: ${{ inputs.context }}
         DESCRIPTION: ${{ inputs.description }}
         STATUS: ${{ inputs.status }}
-        TARGET_URL: ${{ inputs.target_url }}
       with:
         script: |
           try {
             var { REPOSITORY_FULL_NAME, SHA, CONTEXT, DESCRIPTION, STATUS } = process.env;
-
-            if("TARGET_URL" in process.env) { 
-              var TARGET_URL = process.env.TARGET_URL;
+            const myInput = core.getInput('target_url', { required: false });
+            if (myInput) {
+              var TARGET_URL = myInput;
             }
             else { 
               var TARGET_URL = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             }
+            
             core.info(`Vars Repo:  ${REPOSITORY_FULL_NAME} ,SHA:  ${SHA} ,Context:  ${CONTEXT} ,Desc:  ${DESCRIPTION} , URL: ${TARGET_URL} , Status: ${STATUS}`);
             await github.rest.repos.createCommitStatus({
-              owner: REPOSITORY_FULL_NAME.split["/"][0],
-              repo: REPOSITORY_FULL_NAME.split["/"][1],
+              owner: REPOSITORY_FULL_NAME.split("/")[0],
+              repo: REPOSITORY_FULL_NAME.split("/")[1],
               sha: SHA,
               context: CONTEXT,
               description: DESCRIPTION,
               state: STATUS,
-              target_url: TARGET_URL
+              target_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             });
             core.info(`Updated build status with ${STATUS} for commit ${SHA} on ${REPOSITORY_FULL_NAME}`);
           } catch (err) {
