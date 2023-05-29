@@ -28,6 +28,9 @@ runs:
             core.info(`Incoming event is ${githubEvent}`);
             core.exportVariable("TRIGGERER_EVENT", githubEvent);
             switch (githubEvent) {
+              case "status":
+                core.exportVariable("TRIGGERER_COMMIT_SHA", payload.sha);
+                break;
               case "push":
                 core.exportVariable("TRIGGERER_BRANCH", payload.ref.split("/")[2]);
                 core.exportVariable("TRIGGERER_COMMIT_SHA", payload.head_commit.id);
