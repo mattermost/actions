@@ -29,3 +29,4 @@ runs:
           dist/*.tar.gz
           dist/release-notes.md
         if-no-files-found: error
+        retention-days: ${{ github.event_name == 'schedule' && 5 || 90 }}
