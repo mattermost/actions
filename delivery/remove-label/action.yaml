@@ -1,0 +1,56 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost/remove-label"
+description: "An action that removes the specified label"
+
+inputs:
+  repository_full_name:
+    description: "The full name of the repository"
+    required: false
+  pr_number:
+    description: "The pr number for the label removal"
+    required: false
+  label:
+    description: "The label to remove"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: ci/update-commit-status
+      uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+      env:
+        LABEL: ${{ inputs.label }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        REPOSITORY_FULL_NAME: ${{ inputs.repository_full_name }}
+      with:
+        github-token: ${{ env.GITHUB_TOKEN }}
+        script: |
+          try {
+            var { LABEL, REPOSITORY_FULL_NAME, PR_NUMBER } = process.env;
+
+            var label = LABEL;
+
+            if (REPOSITORY_FULL_NAME) {
+              var repository_full_name = REPOSITORY_FULL_NAME;
+            } else {
+              var repository_full_name = "${{ github.repository }}";
+            }
+            
+            if (PR_NUMBER) {
+              var number = parseInt(PR_NUMBER);
+            } else {
+              var number = parseInt("${{ github.event.number }}");
+            }
+
+            await github.rest.issues.removeLabel({
+              owner: repository_full_name.split("/")[0],
+              repo: repository_full_name.split("/")[1],
+              issue_number: number,
+              label
+            });
+
+            core.info(`Label ${label} removed successfully`);
+          } catch (err) {
+            core.error(`Failed to remove label: ${label}`);
+            core.setFailed(`Action failed with error: ${err}`);
+          }
