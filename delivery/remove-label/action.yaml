@@ -16,7 +16,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: ci/update-commit-status
+    - name: remove-label
       uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
       env:
         LABEL: ${{ inputs.label }}
@@ -41,15 +41,25 @@ runs:
             } else {
               var number = parseInt("${{ github.event.number }}");
             }
-
-            await github.rest.issues.removeLabel({
+            
+            var existingLabels = github.rest.issues.listLabelsOnIssue({
               owner: repository_full_name.split("/")[0],
               repo: repository_full_name.split("/")[1],
               issue_number: number,
-              name: label
             });
 
-            core.info(`Label ${label} removed successfully`);
+            if (existingLabels.includes(label)) {
+              await github.rest.issues.removeLabel({
+                owner: repository_full_name.split("/")[0],
+                repo: repository_full_name.split("/")[1],
+                issue_number: number,
+                name: label
+              });
+              core.info(`Label ${label} removed successfully`);
+            } else {
+              core.info(`Label ${label} does not exist`);
+            }
+
           } catch (err) {
             core.error(`Failed to remove label: ${label}`);
             core.setFailed(`Action failed with error: ${err}`);
