@@ -46,7 +46,7 @@ runs:
               owner: repository_full_name.split("/")[0],
               repo: repository_full_name.split("/")[1],
               issue_number: number,
-              label
+              name: label
             });
 
             core.info(`Label ${label} removed successfully`);
