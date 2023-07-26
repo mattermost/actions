@@ -42,22 +42,30 @@ runs:
               var number = parseInt("${{ github.event.number }}");
             }
             
-            var existingLabels = github.rest.issues.listLabelsOnIssue({
+            // Fetch existing labels from PR
+            var labelsResponse = await github.rest.issues.listLabelsOnIssue({
               owner: repository_full_name.split("/")[0],
               repo: repository_full_name.split("/")[1],
               issue_number: number,
             });
+            
+            // Get the actual labels
+            var existingLabels = labelsResponse.data
 
-            if (existingLabels.includes(label)) {
-              await github.rest.issues.removeLabel({
-                owner: repository_full_name.split("/")[0],
-                repo: repository_full_name.split("/")[1],
-                issue_number: number,
-                name: label
-              });
-              core.info(`Label ${label} removed successfully`);
+            if (existingLabels.length === 0) {
+              core.info(`PR ${number} on ${repository_full_name} has no labels`);
             } else {
-              core.info(`Label ${label} does not exist`);
+              if (existingLabels.some(existingLabel => existingLabel.name === label)) {
+                await github.rest.issues.removeLabel({
+                  owner: repository_full_name.split("/")[0],
+                  repo: repository_full_name.split("/")[1],
+                  issue_number: number,
+                  name: label
+                });
+                core.info(`Label ${label} removed successfully`);
+              } else {
+                core.info(`Label ${label} does not exist on PR ${number} for ${repository_full_name} repo`)
+              }
             }
 
           } catch (err) {
