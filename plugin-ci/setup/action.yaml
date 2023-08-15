@@ -21,7 +21,7 @@ inputs:
     required: false
 
   golang-version:
-    default: "1.19"
+    default: "1.21"
     description: |
       Set the version for Golang
     required: false
