@@ -9,7 +9,7 @@ description: |
 
 inputs:
   golangci-lint-version:
-    default: v1.49.0
+    default: v1.52.2
     description: |
       The version to use for golangci-lint
     required: false
