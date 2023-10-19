@@ -45,10 +45,14 @@ runs:
           try {
             var { PIPELINE_VARIABLES } = process.env ;
             const params = new URLSearchParams(); 
-            
+
+            // Set up token and pipeline reference
+            params.append("token","${{ env.PIPELINE_TRIGGER_TOKEN }}");
+            params.append("ref","${{ inputs.GITLAB_PROJECT_REF }}");
+
             // Parse input variables if they exist
             if (PIPELINE_VARIABLES) {
-              var vars = PIPELINE_VARIABLES.split("\n").filter(l => l !== '');
+              var vars = PIPELINE_VARIABLES.split("\n").filter(v => v !== '');
 
               vars.forEach((varObj) => {
                 var variable = 'variables['+ varObj.split("=")[0]+']';
@@ -57,18 +61,13 @@ runs:
               })
             }
 
-            // Set up token and pipeline reference
-            params.append("token","${{ env.PIPELINE_TRIGGER_TOKEN }}");
-            params.append("ref","${{ inputs.GITLAB_PROJECT_REF }}");
-
             const response = await fetch('${{ inputs.GITLAB_URL }}/api/v4/projects/${{ inputs.GITLAB_PROJECT_ID }}/trigger/pipeline', {method: 'POST', body: params});
+            const data = await response.json();
+
             if (!response.ok) {
-              const data = await response.json();
               throw new Error(`Response: ${response.status} - ${response.statusText} - ${data.message.base[0]}`);
             }  
 
-            const data = await response.json();
-            
             core.setOutput("GITLAB_PIPELINE_URL", data.web_url)
             core.setOutput("GITLAB_PIPELINE_ID", data.id)
             core.setOutput("GITLAB_PIPELINE_IID", data.iid)
