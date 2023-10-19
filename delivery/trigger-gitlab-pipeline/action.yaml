@@ -1,0 +1,79 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost/trigger-gitlab-pipeline"
+description: "An action that triggers a Gitlab Pipeline through the Gitlab Pipeline Trigger token"
+
+inputs:
+  GITLAB_URL:
+    description: "The Gitlab server URL"
+    required: true
+    default: "https://git.internal.mattermost.com"
+  GITLAB_PROJECT_ID:
+    description: "The id of the Gitlab Project"
+    required: true
+  GITLAB_PROJECT_REF:
+    description: "The ref of the Gitlab Project"
+    required: true
+    default: main
+  PIPELINE_VARIABLES:
+    description: "The variables passed to the CI"
+    required: false
+
+outputs:
+  GITLAB_PIPELINE_URL:
+    description: "The Gitlab Pipeline URL that was triggered"
+    value: ${{ steps.gitlab-pipeline.outputs.GITLAB_PIPELINE_URL }}
+  GITLAB_PIPELINE_ID:
+    description: "The Gitlab Pipeline ID that was triggered"
+    value: ${{ steps.gitlab-pipeline.outputs.GITLAB_PIPELINE_ID }}
+  GITLAB_PIPELINE_IID:
+    description: "The Gitlab Pipeline IID that was triggered"
+    value: ${{ steps.gitlab-pipeline.outputs.GITLAB_PIPELINE_IID }}
+  GITLAB_PIPELINE_SHA:
+    description: "The Gitlab Pipeline SHA that was triggered"
+    value: ${{ steps.gitlab-pipeline.outputs.GITLAB_PIPELINE_SHA }}
+
+runs:
+  using: composite
+  steps:
+    - name: ci/trigger-gitlab-pipeline
+      id: gitlab-pipeline
+      uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+      env:
+        PIPELINE_VARIABLES: ${{ inputs.PIPELINE_VARIABLES }}
+      with:
+        script: |
+          try {
+            var { PIPELINE_VARIABLES } = process.env ;
+            const params = new URLSearchParams(); 
+
+            // Set up token and pipeline reference
+            params.append("token","${{ env.PIPELINE_TRIGGER_TOKEN }}");
+            params.append("ref","${{ inputs.GITLAB_PROJECT_REF }}");
+
+            // Parse input variables if they exist
+            if (PIPELINE_VARIABLES) {
+              var vars = PIPELINE_VARIABLES.split("\n").filter(v => v !== '');
+
+              vars.forEach((varObj) => {
+                var variable = 'variables['+ varObj.split("=")[0]+']';
+                var value = varObj.split("=")[1];
+                params.append(variable,value);
+              })
+            }
+
+            const response = await fetch('${{ inputs.GITLAB_URL }}/api/v4/projects/${{ inputs.GITLAB_PROJECT_ID }}/trigger/pipeline', {method: 'POST', body: params});
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(`Response: ${response.status} - ${response.statusText} - ${data.message.base[0]}`);
+            }  
+
+            core.setOutput("GITLAB_PIPELINE_URL", data.web_url)
+            core.setOutput("GITLAB_PIPELINE_ID", data.id)
+            core.setOutput("GITLAB_PIPELINE_IID", data.iid)
+            core.setOutput("GITLAB_PIPELINE_SHA", data.sha)
+
+            core.info("Gitlab pipeline triggered");
+          } catch (err) {
+            core.setFailed(`Action failed with error ${err}`);
+          }
