@@ -18,10 +18,25 @@ inputs:
     description: "The variables passed to the CI"
     required: false
 
+outputs:
+  GITLAB_PIPELINE_URL:
+    description: "The Gitlab Pipeline URL that was triggered"
+    value: ${{ steps.gitlab-pipeline.outputs.GITLAB_PIPELINE_URL }}
+  GITLAB_PIPELINE_ID:
+    description: "The Gitlab Pipeline ID that was triggered"
+    value: ${{ steps.gitlab-pipeline.outputs.GITLAB_PIPELINE_ID }}
+  GITLAB_PIPELINE_IID:
+    description: "The Gitlab Pipeline IID that was triggered"
+    value: ${{ steps.gitlab-pipeline.outputs.GITLAB_PIPELINE_IID }}
+  GITLAB_PIPELINE_SHA:
+    description: "The Gitlab Pipeline SHA that was triggered"
+    value: ${{ steps.gitlab-pipeline.outputs.GITLAB_PIPELINE_SHA }}
+
 runs:
   using: composite
   steps:
     - name: ci/trigger-gitlab-pipeline
+      id: gitlab-pipeline
       uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
       env:
         PIPELINE_VARIABLES: ${{ inputs.PIPELINE_VARIABLES }}
