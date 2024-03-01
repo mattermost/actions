@@ -1,0 +1,28 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost/delete-cloud-installation"
+description: "An action that deletes a Mattermost cloud installation from Github Actions"
+
+inputs:
+  server:
+    description: The provisioning server whose API will be queried.
+    required: true
+  headers:
+    description:
+      The headers to add in every api call towards the provisioning server. Accepts new line list format
+      HEADER_NAME=HEADER_VALUE
+      HEADER_NAME2=HEADER_VALUE2
+    required: false
+  installation-id:
+    description: The installation id of mattermost cloud instance
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: delete-cloud-installation
+      env:
+        PROVISIONER_SERVER: ${{ inputs.server }}
+        PROVISIONER_HEADERS: ${{ inputs.headers }}
+        INSTALLATION_ID: ${{ inputs.installation-id }}
+      shell: bash
+      run: ${{ github.action_path }}/delete.sh

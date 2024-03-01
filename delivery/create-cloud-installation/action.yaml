@@ -1,0 +1,146 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost/create-cloud-installation"
+description: "An action that creates a Mattermost cloud installation from Github Actions"
+
+inputs:
+  dns:
+    description: URLs at which the Mattermost server will be available.
+    required: true
+  server:
+    description: The provisioning server whose API will be queried.
+    required: true
+  headers:
+    description:
+      The headers to add in every api call towards the provisioning server. Accepts new line list format
+      HEADER_NAME=HEADER_VALUE
+      HEADER_NAME2=HEADER_VALUE2
+    required: false
+  mattermost-version:
+    description: The Mattermost version to install.
+    default: latest
+    required: true
+  licence:
+    description: The Mattermost License to use in the server.
+    required: false
+  size:
+    description: The size of the installation. Accepts 100users, 1000users, 5000users, 10000users, 25000users, miniSingleton, or miniHA. Defaults to 100users.
+    default: 100users
+    required: false
+  image:
+    description: The Mattermost container image to use. (default "mattermost/mattermost-enterprise-edition")
+    default: mattermost/mattermost-enterprise-edition
+    required: false
+  name:
+    description: Unique human-readable installation name. It should be the same as first segment of domain name.
+    required: false
+  owner:
+    description: An opaque identifier describing the owner of the installation.
+    default: DeliveryTeam
+    required: false
+  mattermost-env:
+    description: |
+      Env vars to add to the Mattermost App. Accepts new line list format
+      KEY_NAME=VALUE
+      KEY_NAME2=VALUE2
+    required: false
+  priority-env:
+    description: |
+      Env vars to add to the Mattermost App that take priority over group config. Accepts new line list format
+      KEY_NAME=VALUE
+      KEY_NAME2=VALUE2
+    required: false
+  affinity:
+    description: How other installations may be co-located in the same cluster. (default "multitenant")
+    default: multitenant
+    required: false
+  annotations:
+    description: Additional annotations for the installation. Accepts multiple values comma separated
+    default: multi-tenant
+    required: false
+  database:
+    description: The Mattermost server database type. Accepts mysql-operator, aws-rds, aws-rds-postgres, aws-multitenant-rds, or aws-multitenant-rds-postgres (default "aws-multitenant-rds-postgres-pgbouncer")
+    default: aws-multitenant-rds-postgres-pgbouncer
+    required: false
+  filestore:
+    description: The Mattermost server filestore type. Accepts minio-operator, aws-s3, bifrost, or aws-multitenant-s3 (default "bifrost")
+    default: bifrost
+    required: false
+  group:
+    description: The id of the group to join
+    required: false
+  group-selection-annotations:
+    description: Annotations for automatic group selection. Accepts multiple values comma separated
+    required: false
+
+outputs:
+  installation-id:
+    description: The installation id that was created
+    value: ${{ steps.installation.outputs.id }}
+  cluster-installation-id:
+    description: The cluster installation id that was created
+    value: ${{ steps.cluster-installation.outputs.id }}
+  group:
+    description: The group id that the installation joined
+    value: ${{ inputs.group }}
+  owner:
+    description: The owner of the installation
+    value: ${{ inputs.owner }}
+  dns:
+    description: The installation DNS
+    value: ${{ inputs.dns }}.test.mattermost.cloud
+  url:
+    description: The installation URL
+    value: https://${{ inputs.dns }}.test.mattermost.cloud
+  username:
+    description: The installation system admin username
+    value: ${{ steps.state.outputs.username }}
+  password:
+    description: The installation system admin password
+    value: ${{ steps.state.outputs.password }}
+
+runs:
+  using: composite
+  steps:
+    - name: create-cloud-installation
+      id: installation
+      env:
+        PROVISIONER_SERVER: ${{ inputs.server }}
+        PROVISIONER_HEADERS: ${{ inputs.headers }}
+        INSTALLATION_DNS: ${{ inputs.dns }}.test.mattermost.cloud
+        INSTALLATION_SIZE: ${{ inputs.size }}
+        INSTALLATION_OWNER: ${{ inputs.owner }}
+        INSTALLATION_NAME: ${{ inputs.name }}
+        INSTALLATION_GROUP: ${{ inputs.group }}
+        INSTALLATION_AFFINITY: ${{ inputs.affinity }}
+        INSTALLATION_ANNOTATIONS: ${{ inputs.annotations }}
+        INSTALLATION_GROUP_SELECTION_ANNOTATIONS: ${{ inputs.group-selection-annotations }}
+        INSTALLATION_DATABASE: ${{ inputs.database }}
+        INSTALLATION_FILESTORE: ${{ inputs.filestore }}
+        MM_VERSION: ${{ inputs.mattermost-version }}
+        MM_IMAGE: ${{ inputs.image }}
+        MM_LICENCE: ${{ inputs.licence }}
+        MM_ENV: ${{ inputs.mattermost-env }}
+        MM_PRIORITY_ENV: ${{ inputs.priority-env }}
+      shell: bash
+      run: ${{ github.action_path }}/cloud.sh
+
+    - name: wait-for-installation-readiness
+      id: cluster-installation
+      env:
+        PROVISIONER_SERVER: ${{ inputs.server }}
+        PROVISIONER_HEADERS: ${{ inputs.headers }}
+        INSTALLATION_ID: ${{ steps.installation.outputs.id }}
+        INITIAL_STATE: ${{ steps.installation.outputs.state }}
+      shell: bash
+      run: ${{ github.action_path }}/ensure.sh
+
+    - name: initiate-installation
+      id: state
+      env:
+        PROVISIONER_SERVER: ${{ inputs.server }}
+        PROVISIONER_HEADERS: ${{ inputs.headers }}
+        CLUSTER_INSTALLATION_ID: ${{ steps.cluster-installation.outputs.id }}
+        MM_INIT_USERNAME: admin
+        MM_INIT_PASSWORD: p@ssword12345678#
+      shell: bash
+      run: ${{ github.action_path }}/init.sh
