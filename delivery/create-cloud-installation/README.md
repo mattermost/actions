@@ -15,28 +15,27 @@ jobs:
           
       - uses: mattermost/actions/delivery/create-cloud-installation@main
         with:
-          dns: my-first-instance.test.mattermost.com
+          name: my-first-instance
           server: https://delivery-provisioner.test.mattermost.com
           mattermost-version: 9.5.0
           mattermost-env: |-
             KEY_NAME=VALUE
             KEY_NAME2=VALUE2
           headers: |-
-            x-api-key=MY_TOKEN
+            x-api-key=${{ secrets.MY_TOKEN }}
 ```
 
 ### Inputs
 
 | Input                       | Description                                                                                                                                                                                     | Default                                  | Required |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------- |
-| dns                         | URLs at which the Mattermost server will be available.                                                                                                                                          |                                          | true     |
+| name                        | Subdomain at which the Mattermost server will be available. `${name}.test.mattermost.cloud`                                                                                                     |                                          | true     |
 | server                      | The provisioning server whose API will be queried.                                                                                                                                              |                                          | true     |
 | headers                     | The headers to add in every api call towards the provisioning server. Accepts new line list format                                                                                              |                                          | false    |
 | mattermost-version          | The Mattermost version to install.                                                                                                                                                              | latest                                   | true     |
 | licence                     | The Mattermost License to use in the server.                                                                                                                                                    |                                          | false    |
 | size                        | The size of the installation. Accepts 100users, 1000users, 5000users, 10000users, 25000users, miniSingleton, or miniHA. Defaults to 100users.                                                   | 100users                                 | false    |
 | image                       | The Mattermost container image to use. (default "mattermost/mattermost-enterprise-edition")                                                                                                     | mattermost/mattermost-enterprise-edition | false    |
-| name                        | Unique human-readable installation name. It should be the same as first segment of domain name.                                                                                                 |                                          | false    |
 | owner                       | An opaque identifier describing the owner of the installation.                                                                                                                                  | DeliveryTeam                             | false    |
 | mattermost-env              | Env vars to add to the Mattermost App. Accepts new line list format                                                                                                                             |                                          | false    |
 | priority-env                | Env vars to add to the Mattermost App that take priority over group config. Accepts new line list format                                                                                        |                                          | false    |

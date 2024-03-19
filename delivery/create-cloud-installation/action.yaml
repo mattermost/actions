@@ -3,8 +3,8 @@ name: "mattermost/create-cloud-installation"
 description: "An action that creates a Mattermost cloud installation from Github Actions"
 
 inputs:
-  dns:
-    description: URLs at which the Mattermost server will be available.
+  name:
+    description: Subdomain at which the Mattermost server will be available. `<name>.test.mattermost.cloud`
     required: true
   server:
     description: The provisioning server whose API will be queried.
@@ -29,9 +29,6 @@ inputs:
   image:
     description: The Mattermost container image to use. (default "mattermost/mattermost-enterprise-edition")
     default: mattermost/mattermost-enterprise-edition
-    required: false
-  name:
-    description: Unique human-readable installation name. It should be the same as first segment of domain name.
     required: false
   owner:
     description: An opaque identifier describing the owner of the installation.
@@ -87,7 +84,7 @@ outputs:
     value: ${{ inputs.owner }}
   dns:
     description: The installation DNS
-    value: ${{ inputs.dns }}.test.mattermost.cloud
+    value: ${{ inputs.name }}.test.mattermost.cloud
   url:
     description: The installation URL
     value: https://${{ inputs.dns }}.test.mattermost.cloud
@@ -106,10 +103,9 @@ runs:
       env:
         PROVISIONER_SERVER: ${{ inputs.server }}
         PROVISIONER_HEADERS: ${{ inputs.headers }}
-        INSTALLATION_DNS: ${{ inputs.dns }}.test.mattermost.cloud
+        INSTALLATION_DNS: ${{ inputs.name }}.test.mattermost.cloud
         INSTALLATION_SIZE: ${{ inputs.size }}
         INSTALLATION_OWNER: ${{ inputs.owner }}
-        INSTALLATION_NAME: ${{ inputs.name }}
         INSTALLATION_GROUP: ${{ inputs.group }}
         INSTALLATION_AFFINITY: ${{ inputs.affinity }}
         INSTALLATION_ANNOTATIONS: ${{ inputs.annotations }}

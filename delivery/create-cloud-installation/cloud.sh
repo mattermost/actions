@@ -35,10 +35,6 @@ if [ -n "${INSTALLATION_OWNER}" ]; then
   CMD_ARGS+=("--owner ${INSTALLATION_OWNER}")
 fi
 
-if [ -n "${INSTALLATION_NAME}" ]; then
-  CMD_ARGS+=("--name ${INSTALLATION_NAME}")
-fi
-
 if [ -n "${INSTALLATION_GROUP}" ]; then
   CMD_ARGS+=("--group ${INSTALLATION_GROUP}")
 fi
