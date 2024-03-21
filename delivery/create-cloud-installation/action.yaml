@@ -9,6 +9,14 @@ inputs:
   server:
     description: The provisioning server whose API will be queried.
     required: true
+  username:
+    description: The installation system admin username
+    required: true
+    default: admin
+  password:
+    description: The installation system admin password
+    required: true
+    default: p@ssword12345678#
   headers:
     description:
       The headers to add in every api call towards the provisioning server. Accepts new line list format
@@ -87,7 +95,7 @@ outputs:
     value: ${{ inputs.name }}.test.mattermost.cloud
   url:
     description: The installation URL
-    value: https://${{ inputs.dns }}.test.mattermost.cloud
+    value: https://${{ inputs.name }}.test.mattermost.cloud
   username:
     description: The installation system admin username
     value: ${{ steps.state.outputs.username }}
@@ -136,7 +144,7 @@ runs:
         PROVISIONER_SERVER: ${{ inputs.server }}
         PROVISIONER_HEADERS: ${{ inputs.headers }}
         CLUSTER_INSTALLATION_ID: ${{ steps.cluster-installation.outputs.id }}
-        MM_INIT_USERNAME: admin
-        MM_INIT_PASSWORD: p@ssword12345678#
+        MM_INIT_USERNAME: ${{ inputs.username }}
+        MM_INIT_PASSWORD: ${{ inputs.password }}
       shell: bash
       run: ${{ github.action_path }}/init.sh

@@ -29,9 +29,11 @@ jobs:
 
 | Input                       | Description                                                                                                                                                                                     | Default                                  | Required |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------- |
-| name                        | Subdomain at which the Mattermost server will be available. `${name}.test.mattermost.cloud`                                                                                                     |                                          | true     |
+| name                        | Subdomain at which the Mattermost server will be available. `<name>.test.mattermost.cloud`                                                                                                      |                                          | true     |
 | server                      | The provisioning server whose API will be queried.                                                                                                                                              |                                          | true     |
-| headers                     | The headers to add in every api call towards the provisioning server. Accepts new line list format                                                                                              |                                          | false    |
+| username                    | The installation system admin username                                                                                                                                                          | admin                                    | true     |
+| password                    | The installation system admin password                                                                                                                                                          | p@ssword12345678#                        | true     |
+| headers                     | The headers to add in every API call towards the provisioning server. Accepts new line list format                                                                                              |                                          | false    |
 | mattermost-version          | The Mattermost version to install.                                                                                                                                                              | latest                                   | true     |
 | licence                     | The Mattermost License to use in the server.                                                                                                                                                    |                                          | false    |
 | size                        | The size of the installation. Accepts 100users, 1000users, 5000users, 10000users, 25000users, miniSingleton, or miniHA. Defaults to 100users.                                                   | 100users                                 | false    |
@@ -46,15 +48,17 @@ jobs:
 | group                       | The id of the group to join                                                                                                                                                                     |                                          | false    |
 | group-selection-annotations | Annotations for automatic group selection. Accepts multiple values comma separated                                                                                                              |                                          | false    |
 
+
 ### Outputs
 
-| Output                  | Description                                  |
-| ----------------------- | -------------------------------------------- |
-| installation-id         | The installation id that was created         |
-| cluster-installation-id | The cluster installation id that was created |
-| group                   | The group id that the installation joined    |
-| owner                   | The owner of the installation                |
-| dns                     | The installation DNS                         |
-| url                     | The installation URL                         |
-| username                | The installation system admin username       |
-| password                | The installation system admin password       |
+| Output                  | Description                                  | Value                                            |
+| ----------------------- | -------------------------------------------- | ------------------------------------------------ |
+| installation-id         | The installation id that was created         | ${{ steps.installation.outputs.id }}             |
+| cluster-installation-id | The cluster installation id that was created | ${{ steps.cluster-installation.outputs.id }}     |
+| group                   | The group id that the installation joined    | ${{ inputs.group }}                              |
+| owner                   | The owner of the installation                | ${{ inputs.owner }}                              |
+| dns                     | The installation DNS                         | ${{ inputs.name }}.test.mattermost.cloud         |
+| url                     | The installation URL                         | https://${{ inputs.name }}.test.mattermost.cloud |
+| username                | The installation system admin username       | ${{ steps.state.outputs.username }}              |
+| password                | The installation system admin password       | ${{ steps.state.outputs.password }}              |
+
