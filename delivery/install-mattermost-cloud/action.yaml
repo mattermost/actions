@@ -1,0 +1,23 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost/install-mattermost-cloud"
+description: "An action that installs Mattermost cloud CLI"
+
+inputs:
+  version:
+    description: The version of Mattermost Cloud CLI
+    default: 0.83.0
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: download-mattermost-cloud-cli
+      shell: bash
+      run: wget --quiet https://github.com/mattermost/mattermost-cloud/releases/download/v${{ inputs.version }}/mattermost-cloud-linux-amd64.tar.gz -O /tmp/mattermost-cloud-linux-amd64.tar.gz
+
+    - name: install-mattermost-cloud-cli
+      shell: bash
+      run: |
+        mkdir -p ${HOME}/.local/bin
+        tar xf /tmp/mattermost-cloud-linux-amd64.tar.gz --strip-components=5 -C ${HOME}/.local/bin
+        echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
