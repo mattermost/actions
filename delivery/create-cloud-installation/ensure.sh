@@ -13,7 +13,7 @@ TIMEOUT_SECONDS=120
 INFO Constructing cloud command ...
 
 CMD=("cloud installation get")
-CMD_ARGS=("--server ${PROVISIONER_SERVER}")
+CMD_ARGS=("--server \"${PROVISIONER_SERVER}\"")
 
 if [ -n "${PROVISIONER_HEADERS}" ]; then
   while IFS= read -r header; do
@@ -66,7 +66,7 @@ if [ -n "${PROVISIONER_HEADERS}" ]; then
   done <<< "${PROVISIONER_HEADERS}"
 fi
 
-CMD_ARGS+=("--installation ${INSTALLATION_ID}")
+CMD_ARGS+=("--installation \"${INSTALLATION_ID}\"")
 
 FINAL_COMMAND="${CMD[@]} ${CMD_ARGS[@]}"
 INFO "Executing command -> ${FINAL_COMMAND}"

@@ -19,8 +19,8 @@ fi
 CMD_ARGS+=("--dns \"${INSTALLATION_DNS}\"")
 CMD_ARGS+=("--version \"${MM_VERSION}\"")
 
-if [ -n "${MM_LICENCE}" ]; then
-  CMD_ARGS+=("--license \"${MM_LICENCE}\"")
+if [ -n "${MM_LICENSE}" ]; then
+  CMD_ARGS+=("--license \"${MM_LICENSE}\"")
 fi
 
 if [ -n "${MM_IMAGE}" ]; then

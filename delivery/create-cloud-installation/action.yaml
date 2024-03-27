@@ -27,7 +27,7 @@ inputs:
     description: The Mattermost version to install.
     default: latest
     required: true
-  licence:
+  license:
     description: The Mattermost License to use in the server.
     required: false
   size:
@@ -122,7 +122,7 @@ runs:
         INSTALLATION_FILESTORE: ${{ inputs.filestore }}
         MM_VERSION: ${{ inputs.mattermost-version }}
         MM_IMAGE: ${{ inputs.image }}
-        MM_LICENCE: ${{ inputs.licence }}
+        MM_LICENSE: ${{ inputs.license }}
         MM_ENV: ${{ inputs.mattermost-env }}
         MM_PRIORITY_ENV: ${{ inputs.priority-env }}
       shell: bash
