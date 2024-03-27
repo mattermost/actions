@@ -8,7 +8,7 @@ source ${GITHUB_ACTION_PATH}/log.sh
 
 DESIRED_STATE="stable" 
 BACKOFF_SECONDS=10
-TIMEOUT_SECONDS=120
+TIMEOUT_SECONDS=300
 
 INFO Constructing cloud command ...
 
