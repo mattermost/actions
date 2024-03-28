@@ -52,7 +52,7 @@ runs:
               context: CONTEXT,
               description: DESCRIPTION,
               state: STATUS,
-              target_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              target_url: TARGET_URL
             });
             core.info(`Updated build status with ${STATUS} for commit ${SHA} on ${REPOSITORY_FULL_NAME}`);
           } catch (err) {
