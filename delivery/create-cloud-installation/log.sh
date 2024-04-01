@@ -14,6 +14,7 @@ INFO () {
   echo $(date +%H:%M:%S) ${BLUE}[INFO]${CNone} $@ ; 
 }
 ERROR () {
+  echo $(date +%H:%M:%S) ${RED}[ERROR]${CNone} $@ ; 
   echo ::error title="Cloud Installation Creation Failed"::$@
 }
 OK () {

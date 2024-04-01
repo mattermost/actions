@@ -16,7 +16,7 @@ if [ -n "${PROVISIONER_HEADERS}" ]; then
   done <<< "${PROVISIONER_HEADERS}"
 fi
 
-CMD_ARGS+=("--cluster-installation ${CLUSTER_INSTALLATION_ID}")
+CMD_ARGS+=("--cluster-installation \"${CLUSTER_INSTALLATION_ID}\"")
 
 CREATE_USER_ARGS=("--command \"user create --local --disable-welcome-email --system-admin --email-verified --email admin@example.com --username ${MM_INIT_USERNAME} --password ${MM_INIT_PASSWORD}\"")
 CREATE_TEAM_ARGS=("--command \"team create --local --name main --display-name DeliveryTeamCMT --email admin@example.com\"")
