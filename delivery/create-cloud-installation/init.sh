@@ -19,7 +19,7 @@ fi
 CMD_ARGS+=("--cluster-installation \"${CLUSTER_INSTALLATION_ID}\"")
 
 CREATE_USER_ARGS=("--command \"user create --local --disable-welcome-email --system-admin --email-verified --email admin@example.com --username ${MM_INIT_USERNAME} --password ${MM_INIT_PASSWORD}\"")
-CREATE_TEAM_ARGS=("--command \"team create --local --name main --display-name DeliveryTeamCMT --email admin@example.com\"")
+CREATE_TEAM_ARGS=("--command \"team create --local --name main --display-name ad-1 --email admin@example.com\"")
 ADD_USER_TO_TEAM_ARGS=("--command \"team users add main admin --local\"")
 
 CREATE_USER_COMMAND="${CMD[@]} ${CMD_ARGS[@]} ${CREATE_USER_ARGS[@]}"
