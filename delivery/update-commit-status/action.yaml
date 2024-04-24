@@ -33,12 +33,12 @@ runs:
         CONTEXT: ${{ inputs.context }}
         DESCRIPTION: ${{ inputs.description }}
         STATUS: ${{ inputs.status }}
+        TARGET_URL: ${{ inputs.target_url }}
       with:
         github-token: ${{ env.GITHUB_TOKEN }}
         script: |
           try {
-            var { REPOSITORY_FULL_NAME, SHA, CONTEXT, DESCRIPTION, STATUS } = process.env;
-            var TARGET_URL = core.getInput('target_url', { required: false });
+            var { REPOSITORY_FULL_NAME, SHA, CONTEXT, DESCRIPTION, STATUS, TARGET_URL } = process.env;
 
             if (TARGET_URL) {}
             else { 
