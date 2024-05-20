@@ -7,11 +7,29 @@ inputs:
     description: "The triggerer payload"
     required: true
 
+outputs:
+  TRIGGERER_EVENT:
+    description: "The incoming event"
+    value: ${{ steps.vars.outputs.TRIGGERER_EVENT }}
+  TRIGGERER_COMMIT_SHA:
+    description: "The incoming coommit SHA"
+    value: ${{ steps.vars.outputs.TRIGGERER_COMMIT_SHA }}
+  TRIGGERER_BRANCH:
+    description: "The incoming branch (if exists)"
+    value: ${{ steps.vars.outputs.TRIGGERER_BRANCH }}
+  TRIGGERER_REPO_NAME:
+    description: "The incoming repo name"
+    value: ${{ steps.vars.outputs.TRIGGERER_REPO_NAME }}
+  TRIGGERER_REPO_FULL_NAME:
+    description: "The incoming repo full name"
+    value: ${{ steps.vars.outputs.TRIGGERER_REPO_FULL_NAME }}
+
 runs:
   using: composite
   steps:
     - name: ci/export-payload-environment-vars
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # 7.0.1
+      id: vars
       env:
         PAYLOAD: ${{ inputs.payload }}
       with:
@@ -27,25 +45,35 @@ runs:
 
             core.info(`Incoming event is ${githubEvent}`);
             core.exportVariable("TRIGGERER_EVENT", githubEvent);
+            core.setOutput("TRIGGERER_EVENT", githubEvent);
             switch (githubEvent) {
               case "status":
                 core.exportVariable("TRIGGERER_COMMIT_SHA", payload.sha);
+                core.setOutput("TRIGGERER_COMMIT_SHA", payload.sha);
                 break;
               case "push":
                 core.exportVariable("TRIGGERER_BRANCH", payload.ref.split("/")[2]);
+                core.setOutput("TRIGGERER_BRANCH", payload.ref.split("/")[2]);
                 core.exportVariable("TRIGGERER_COMMIT_SHA", payload.head_commit.id);
+                core.setOutput("TRIGGERER_COMMIT_SHA", payload.head_commit.id);
                 break;
               case "workflow_run":
                 core.exportVariable("TRIGGERER_BRANCH", payload.workflow_run.head_branch);
+                core.setOutput("TRIGGERER_BRANCH", payload.workflow_run.head_branch);
                 core.exportVariable("TRIGGERER_COMMIT_SHA", payload.workflow_run.head_commit.id);
+                core.setOutput("TRIGGERER_COMMIT_SHA", payload.workflow_run.head_commit.id);
                 break;
               case "pull_request":
                 core.exportVariable("TRIGGERER_BRANCH", payload.pull_request.head.ref);
+                core.setOutput("TRIGGERER_BRANCH", payload.pull_request.head.ref);
                 core.exportVariable("TRIGGERER_COMMIT_SHA", payload.pull_request.head.sha);
+                core.setOutput("TRIGGERER_COMMIT_SHA", payload.pull_request.head.sha);
                 break;
             }
             core.exportVariable("TRIGGERER_REPO_NAME", payload.repository.name);
+            core.setOutput("TRIGGERER_REPO_NAME", payload.repository.name);
             core.exportVariable("TRIGGERER_REPO_FULL_NAME", payload.repository.full_name);
+            core.setOutput("TRIGGERER_REPO_FULL_NAME", payload.repository.full_name);
 
             core.info("All variables exposed successfully");
           } catch (err) {
