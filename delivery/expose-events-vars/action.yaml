@@ -23,6 +23,9 @@ outputs:
   TRIGGERER_REPO_FULL_NAME:
     description: "The incoming repo full name"
     value: ${{ steps.vars.outputs.TRIGGERER_REPO_FULL_NAME }}
+  TRIGGERER_USERNAME:
+    description: "The GitHub handle of the triggerer"
+    value: ${{ steps.vars.outputs.TRIGGERER_USERNAME }}
 
 runs:
   using: composite
@@ -56,18 +59,21 @@ runs:
                 core.setOutput("TRIGGERER_BRANCH", payload.ref.split("/")[2]);
                 core.exportVariable("TRIGGERER_COMMIT_SHA", payload.head_commit.id);
                 core.setOutput("TRIGGERER_COMMIT_SHA", payload.head_commit.id);
+                core.setOutput("TRIGGERER_USERNAME", payload.sender.login);
                 break;
               case "workflow_run":
                 core.exportVariable("TRIGGERER_BRANCH", payload.workflow_run.head_branch);
                 core.setOutput("TRIGGERER_BRANCH", payload.workflow_run.head_branch);
                 core.exportVariable("TRIGGERER_COMMIT_SHA", payload.workflow_run.head_commit.id);
                 core.setOutput("TRIGGERER_COMMIT_SHA", payload.workflow_run.head_commit.id);
+                core.setOutput("TRIGGERER_USERNAME", payload.sender.login);
                 break;
               case "pull_request":
                 core.exportVariable("TRIGGERER_BRANCH", payload.pull_request.head.ref);
                 core.setOutput("TRIGGERER_BRANCH", payload.pull_request.head.ref);
                 core.exportVariable("TRIGGERER_COMMIT_SHA", payload.pull_request.head.sha);
                 core.setOutput("TRIGGERER_COMMIT_SHA", payload.pull_request.head.sha);
+                core.setOutput("TRIGGERER_USERNAME", payload.sender.login);
                 break;
             }
             core.exportVariable("TRIGGERER_REPO_NAME", payload.repository.name);
