@@ -1,0 +1,68 @@
+# Copyright 2022 Mattermost, Inc.
+name: "mattermost/create-check-run"
+description: "An action that creates a check run"
+
+inputs:
+  repository_full_name:
+    description: "The full name of the repository"
+    required: true
+  commit_sha:
+    description: "The sha of the commit to update the status"
+    required: true
+  name:
+    description: "The name of the check"
+    required: true
+  summary:
+    description: "The summary of the check"
+    required: true
+  title:
+    description: "The title of the check"
+    required: true
+  status:
+    description: "The state of the status check"
+    required: true
+  target_url:
+    description: "The target url of the status check"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: ci/update-commit-status
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # 7.0.1
+      env:
+        REPOSITORY_FULL_NAME: ${{ inputs.repository_full_name }}
+        SHA: ${{ inputs.commit_sha }}
+        NAME: ${{ inputs.name }}
+        SUMMARY: ${{ inputs.summary }}
+        TITLE: ${{ inputs.title }}
+        STATUS: ${{ inputs.status }}
+        TARGET_URL: ${{ inputs.target_url }}
+      with:
+        github-token: ${{ env.GITHUB_TOKEN }}
+        script: |
+          try {
+            var { REPOSITORY_FULL_NAME, SHA, NAME, SUMMARY, TITLE, STATUS, TARGET_URL } = process.env;
+
+            if (TARGET_URL) {}
+            else { 
+              var TARGET_URL = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
+            }
+
+            await github.rest.checks.create({
+              owner: REPOSITORY_FULL_NAME.split("/")[0],
+              repo: REPOSITORY_FULL_NAME.split("/")[1],
+              head_sha: SHA,
+              name: NAME,
+              status: STATUS,
+              output: {
+                summary: SUMMARY,
+                title: TITLE
+              },
+              details_url: TARGET_URL
+            });
+            core.info(`Updated build status with ${STATUS} for commit ${SHA} on ${REPOSITORY_FULL_NAME}`);
+          } catch (err) {
+            core.error(`Failed to update build status with ${STATUS} for commit ${SHA} on ${REPOSITORY_FULL_NAME}`);
+            core.setFailed(`Action failed with error: ${err}`);
+          }
