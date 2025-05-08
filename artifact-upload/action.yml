@@ -1,29 +1,63 @@
 # Copyright 2022 Mattermost, Inc.
 name: "mattermost/artifact-upload"
-description: |
-  This action used to run the CD artifcat upload
+description: Upload artifacts to an S3 bucket and return public URL(s)
 
 inputs:
   artifacts:
-    description: |
-      The path or files of artifacts to upload
+    description: Path to artifact(s) or directory to upload
     required: true
   bucket:
-    description: |
-      The S3 bucket full path to upload
+    description: S3 bucket name
     required: true
+  aws-region:
+    description: AWS region (e.g., us-east-1)
+    required: true
+  aws-access-key-id:
+    description: Optional custom AWS Access Key ID
+    required: false
+  aws-secret-access-key:
+    description: Optional custom AWS Secret Access Key
+    required: false
+
+outputs:
+  s3-url:
+    description: Public S3 URL(s) of uploaded file(s)
 
 runs:
   using: "composite"
   steps:
+    - name: ci/set-aws-credentials
+      shell: bash
+      run: |
+        echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id || secrets.PLUGIN_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+        echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key || secrets.PLUGIN_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+
     - name: ci/aws-configure
-      uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838 # v1.7.0
+      uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # 4.2.0
       with:
         aws-region: ${{ inputs.aws-region }}
-        aws-access-key-id: ${{ secrets.PLUGIN_AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.PLUGIN_AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
 
     - name: ci/artifact-upload
       shell: bash
       run: |
-        aws s3 cp ${{ inputs.artifacts }} s3://${{ inputs.bucket }} --acl public-read --cache-control no-cache
+        set -e
+        ARTIFACT_PATH="${{ inputs.artifacts }}"
+        BUCKET_NAME="${{ inputs.bucket }}"
+        REGION="${{ inputs.aws-region }}"
+
+        if [ -d "$ARTIFACT_PATH" ]; then
+          aws s3 sync "$ARTIFACT_PATH" "s3://${BUCKET_NAME}/" --cache-control no-cache
+          urls=$(find "$ARTIFACT_PATH" -type f | sed "s|^$ARTIFACT_PATH/||" | while read -r file; do
+            echo "https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/$file"
+          done)
+        else
+          filename=$(basename "$ARTIFACT_PATH")
+          aws s3 cp "$ARTIFACT_PATH" "s3://${BUCKET_NAME}/$filename" --cache-control no-cache
+          urls="https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/$filename"
+        fi
+
+        echo "s3-url<<EOF" >> $GITHUB_OUTPUT
+        echo "$urls" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
