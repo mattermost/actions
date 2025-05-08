@@ -44,12 +44,18 @@ runs:
       run: |
         set -e
         ARTIFACT_PATH="${{ inputs.artifacts }}"
+        ARTIFACT_PATH=$(echo "$ARTIFACT_PATH" | sed 's:/*$::')
         BUCKET_NAME="${{ inputs.bucket }}"
         REGION="${{ inputs.aws-region }}"
 
+        if [ -z "$ARTIFACT_PATH" ] || [ ! -e "$ARTIFACT_PATH" ]; then
+          echo "Error: ARTIFACT_PATH is empty or does not exist." >&2
+          exit 1
+        fi
+
         if [ -d "$ARTIFACT_PATH" ]; then
           aws s3 sync "$ARTIFACT_PATH" "s3://${BUCKET_NAME}/" --cache-control no-cache
-          urls=$(find "$ARTIFACT_PATH" -type f | sed "s|^$ARTIFACT_PATH/||" | while read -r file; do
+          urls=$(find "$ARTIFACT_PATH" -type f | sed "s|^$ARTIFACT_PATH/||" | while IFS= read -r file; do
             echo "https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/$file"
           done)
         else
