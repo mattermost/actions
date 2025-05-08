@@ -29,8 +29,8 @@ runs:
     - name: ci/set-aws-credentials
       shell: bash
       run: |
-        echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id || secrets.PLUGIN_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
-        echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key || secrets.PLUGIN_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+        echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id != '' ? inputs.aws-access-key-id : secrets.PLUGIN_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+        echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key != '' ? inputs.aws-secret-access-key : secrets.PLUGIN_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
 
     - name: ci/aws-configure
       uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # 4.2.0
