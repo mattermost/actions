@@ -58,9 +58,12 @@ runs:
       shell: bash
       run: |
         echo "Configuring Anchore..."
-        echo "ANCHORE_CLI_URL=${{ inputs.anchorectl_url }}" >> $GITHUB_ENV
-        echo "ANCHORE_CLI_USER=${{ inputs.anchorectl_username }}" >> $GITHUB_ENV
-        echo "ANCHORE_CLI_PASS=${{ inputs.anchorectl_password }}" >> $GITHUB_ENV
+        echo "ANCHORECTL_URL=${{ inputs.anchorectl_url }}" >> $GITHUB_ENV
+        echo "ANCHORECTL_USERNAME=${{ inputs.anchorectl_username }}" >> $GITHUB_ENV
+        echo "ANCHORECTL_PASSWORD=${{ inputs.anchorectl_password }}" >> $GITHUB_ENV
+        echo "ANCHORECTL_ACCOUNT=saml" >> $GITHUB_ENV
+        # TODO: Remove this line once TLS certificate issue is resolved
+        echo "ANCHORECTL_HTTP_TLS_INSECURE=true" >> $GITHUB_ENV
 
     - name: Pull Docker image
       shell: bash

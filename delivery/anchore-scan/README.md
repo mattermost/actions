@@ -13,9 +13,9 @@ jobs:
         with:
           image_name: '<MATTERMOST_IMAGE>'
           dockerfile_path: '<RELATIVE_PATH_TO_DOCKERFILE>'
-          anchorectl_url: ${{ secrets.ANCHORE_URL }}
-          anchorectl_username: ${{ secrets.ANCHORE_USERNAME }}
-          anchorectl_password: ${{ secrets.ANCHORE_PASSWORD }}
+          anchorectl_url: ${{ secrets.ANCHORECTL_URL }}
+          anchorectl_username: ${{ secrets.ANCHORECTL_USERNAME }}
+          anchorectl_password: ${{ secrets.ANCHORECTL_PASSWORD }}
           ts_oauth_client_id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           ts_oauth_secret: ${{ secrets.TS_OAUTH_SECRET }}
 ```
