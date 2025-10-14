@@ -49,38 +49,49 @@ runs:
 
     - name: Install Anchore CLI
       shell: bash
+      env:
+        ANCHORECTL_VERSION: "5.21.0"
       run: |
-        echo "Installing anchorectl CLI version 5.21.0..."
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v5.21.0
+        echo "Installing anchorectl CLI version ${ANCHORECTL_VERSION}..."
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v${ANCHORECTL_VERSION}
         anchorectl version
 
     - name: Configure Anchore
       shell: bash
+      env:
+        ANCHORE_URL: ${{ inputs.anchorectl_url }}
+        ANCHORE_USERNAME: ${{ inputs.anchorectl_username }}
+        ANCHORE_PASSWORD: ${{ inputs.anchorectl_password }}
       run: |
         echo "Configuring Anchore..."
-        echo "ANCHORECTL_URL=${{ inputs.anchorectl_url }}" >> $GITHUB_ENV
-        echo "ANCHORECTL_USERNAME=${{ inputs.anchorectl_username }}" >> $GITHUB_ENV
-        echo "ANCHORECTL_PASSWORD=${{ inputs.anchorectl_password }}" >> $GITHUB_ENV
+        echo "ANCHORECTL_URL=${ANCHORE_URL}" >> $GITHUB_ENV
+        echo "ANCHORECTL_USERNAME=${ANCHORE_USERNAME}" >> $GITHUB_ENV
+        echo "ANCHORECTL_PASSWORD=${ANCHORE_PASSWORD}" >> $GITHUB_ENV
         echo "ANCHORECTL_ACCOUNT=saml" >> $GITHUB_ENV
         # TODO: Remove this line once TLS certificate issue is resolved
         echo "ANCHORECTL_HTTP_TLS_INSECURE=true" >> $GITHUB_ENV
 
     - name: Pull Docker image
       shell: bash
+      env:
+        IMAGE_NAME: ${{ inputs.image_name }}
       run: |
-        echo "Pulling Docker image: ${{ inputs.image_name }}"
-        docker pull ${{ inputs.image_name }}
+        echo "Pulling Docker image: ${IMAGE_NAME}"
+        docker pull "${IMAGE_NAME}"
 
     - name: Add image to Anchore and wait for analysis
       shell: bash
       id: add-image
+      env:
+        IMAGE_NAME: ${{ inputs.image_name }}
+        DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
       run: |
         echo "Adding image to Anchore for analysis..."
-        echo "Using Dockerfile: ${{ inputs.dockerfile_path }}"
+        echo "Using Dockerfile: ${DOCKERFILE_PATH}"
         echo "Waiting for analysis to complete..."
 
         # Add image with --wait flag to wait for analysis completion
-        if ! anchorectl image add ${{ inputs.image_name }} --dockerfile ${{ inputs.dockerfile_path }} --force  --wait; then
+        if ! anchorectl image add "${IMAGE_NAME}" --dockerfile "${DOCKERFILE_PATH}" --force  --wait; then
           echo "❌ Failed to add image to Anchore or analysis failed"
           exit 1
         fi
@@ -92,16 +103,18 @@ runs:
       shell: bash
       id: scan
       if: ${{ inputs.show_vulnerabilities == 'true' }}
+      env:
+        IMAGE_NAME: ${{ inputs.image_name }}
       run: |
-        echo "🔍 Retrieving vulnerabilities for ${{ inputs.image_name }}..."
+        echo "🔍 Retrieving vulnerabilities for ${IMAGE_NAME}..."
 
         # Create safe filename from image name
-        safe_name=$(echo "${{ inputs.image_name }}" | sed 's/[^a-zA-Z0-9._-]/_/g')
+        safe_name=$(echo "${IMAGE_NAME}" | sed 's/[^a-zA-Z0-9._-]/_/g')
         output_file="vulnerabilities_${safe_name}.txt"
 
         # Get vulnerabilities with error handling
-        if ! anchorectl image vulnerabilities ${{ inputs.image_name }} > "$output_file" 2>&1; then
-          echo "❌ Failed to retrieve vulnerabilities for ${{ inputs.image_name }}"
+        if ! anchorectl image vulnerabilities "${IMAGE_NAME}" > "$output_file" 2>&1; then
+          echo "❌ Failed to retrieve vulnerabilities for ${IMAGE_NAME}"
           echo "📄 Error details:"
           cat "$output_file" 2>/dev/null || echo "No error details available"
           exit 1
