@@ -1,0 +1,124 @@
+name: 'Anchore Container Vulnerability Scan'
+description: 'Scan Docker images with Anchore for vulnerabilities'
+inputs:
+  image_name:
+    description: 'Docker image name to scan (with tag)'
+    required: true
+  dockerfile_path:
+    description: 'Path to Dockerfile for context'
+    required: false
+    default: './Dockerfile'
+  show_vulnerabilities:
+    description: 'Whether to retrieve and display vulnerabilities after adding image'
+    required: false
+    default: 'true'
+  anchorectl_url:
+    description: 'Anchore URL'
+    required: true
+  anchorectl_username:
+    description: 'Anchore username'
+    required: true
+  anchorectl_password:
+    description: 'Anchore password'
+    required: true
+  ts_oauth_client_id:
+    description: 'Tailscale OAuth client ID'
+    required: true
+  ts_oauth_secret:
+    description: 'Tailscale OAuth secret'
+    required: true
+outputs:
+  vulnerabilities_file:
+    description: 'Path to vulnerabilities text file'
+    value: ${{ steps.scan.outputs.vulnerabilities_file }}
+  image_added:
+    description: 'Whether image was successfully added'
+    value: ${{ steps.add-image.outputs.success }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure Tailscale
+      uses: tailscale/github-action@8688eb839e58e6b25c1ae96cd99d1c173299b842 # v3
+      with:
+        version: latest
+        oauth-client-id: ${{ inputs.ts_oauth_client_id }}
+        oauth-secret: ${{ inputs.ts_oauth_secret }}
+        tags: tag:anchore-github-actions
+        args: --accept-dns
+
+    - name: Install Anchore CLI
+      shell: bash
+      env:
+        ANCHORECTL_VERSION: "5.21.0"
+      run: |
+        echo "Installing anchorectl CLI version ${ANCHORECTL_VERSION}..."
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v${ANCHORECTL_VERSION}
+        anchorectl version
+
+    - name: Configure Anchore
+      shell: bash
+      env:
+        ANCHORE_URL: ${{ inputs.anchorectl_url }}
+        ANCHORE_USERNAME: ${{ inputs.anchorectl_username }}
+        ANCHORE_PASSWORD: ${{ inputs.anchorectl_password }}
+      run: |
+        echo "Configuring Anchore..."
+        echo "ANCHORECTL_URL=${ANCHORE_URL}" >> $GITHUB_ENV
+        echo "ANCHORECTL_USERNAME=${ANCHORE_USERNAME}" >> $GITHUB_ENV
+        echo "ANCHORECTL_PASSWORD=${ANCHORE_PASSWORD}" >> $GITHUB_ENV
+        echo "ANCHORECTL_ACCOUNT=saml" >> $GITHUB_ENV
+        # TODO: Remove this line once TLS certificate issue is resolved
+        echo "ANCHORECTL_HTTP_TLS_INSECURE=true" >> $GITHUB_ENV
+
+    - name: Pull Docker image
+      shell: bash
+      env:
+        IMAGE_NAME: ${{ inputs.image_name }}
+      run: |
+        echo "Pulling Docker image: ${IMAGE_NAME}"
+        docker pull "${IMAGE_NAME}"
+
+    - name: Add image to Anchore and wait for analysis
+      shell: bash
+      id: add-image
+      env:
+        IMAGE_NAME: ${{ inputs.image_name }}
+        DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
+      run: |
+        echo "Adding image to Anchore for analysis..."
+        echo "Using Dockerfile: ${DOCKERFILE_PATH}"
+        echo "Waiting for analysis to complete..."
+
+        # Add image with --wait flag to wait for analysis completion
+        if ! anchorectl image add "${IMAGE_NAME}" --dockerfile "${DOCKERFILE_PATH}" --force  --wait; then
+          echo "❌ Failed to add image to Anchore or analysis failed"
+          exit 1
+        fi
+
+        echo "✅ Image successfully added and analyzed"
+        echo "success=true" >> $GITHUB_OUTPUT
+
+    - name: Retrieve vulnerabilities
+      shell: bash
+      id: scan
+      if: ${{ inputs.show_vulnerabilities == 'true' }}
+      env:
+        IMAGE_NAME: ${{ inputs.image_name }}
+      run: |
+        echo "🔍 Retrieving vulnerabilities for ${IMAGE_NAME}..."
+
+        # Create safe filename from image name
+        safe_name=$(echo "${IMAGE_NAME}" | sed 's/[^a-zA-Z0-9._-]/_/g')
+        output_file="vulnerabilities_${safe_name}.txt"
+
+        # Get vulnerabilities with error handling
+        if ! anchorectl image vulnerabilities "${IMAGE_NAME}" > "$output_file" 2>&1; then
+          echo "❌ Failed to retrieve vulnerabilities for ${IMAGE_NAME}"
+          echo "📄 Error details:"
+          cat "$output_file" 2>/dev/null || echo "No error details available"
+          exit 1
+        fi
+
+        echo "✅ Vulnerabilities saved to: $output_file"
+        echo "vulnerabilities_file=$output_file" >> $GITHUB_OUTPUT
