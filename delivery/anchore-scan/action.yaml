@@ -58,8 +58,11 @@ runs:
         ANCHORECTL_VERSION: "5.21.0"
       run: |
         echo "Installing anchorectl CLI version ${ANCHORECTL_VERSION}..."
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v${ANCHORECTL_VERSION}
-        anchorectl version
+        # Install to a user-writable location for runners without root permissions
+        mkdir -p "${HOME}/.local/bin"
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b "${HOME}/.local/bin" v${ANCHORECTL_VERSION}
+        echo "${HOME}/.local/bin" >> $GITHUB_PATH
+        "${HOME}/.local/bin/anchorectl" version
 
     - name: Configure Anchore
       shell: bash
