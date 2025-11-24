@@ -79,16 +79,63 @@ fi
 
 FINAL_COMMAND="${CMD[@]} ${CMD_ARGS[@]}"
 INFO "Executing command -> ${FINAL_COMMAND}"
-CLOUD_COMMAND_OUTPUT=$(eval "${FINAL_COMMAND}")
+
+# Capture both stdout and stderr
+INFO "Checking if 'cloud' command is available..."
+if ! command -v cloud &> /dev/null; then
+  ERROR "'cloud' command not found in PATH. Please ensure the cloud CLI is installed."
+  ERROR "PATH: ${PATH}"
+  exit 1
+fi
+
+INFO "Executing cloud installation create command..."
+# Temporarily disable exit on error to capture output properly
+set +e
+CLOUD_COMMAND_OUTPUT=$(eval "${FINAL_COMMAND}" 2>&1)
 CLOUD_COMMAND_EXIT_CODE=$?
+set -e
+
+INFO "Command exit code: ${CLOUD_COMMAND_EXIT_CODE}"
+
 if [[ ${CLOUD_COMMAND_EXIT_CODE} -ne 0 ]] ; then
-  ERROR Cloud installation creation failed with error: ${CLOUD_COMMAND_OUTPUT}
+  ERROR "Cloud installation creation failed with exit code: ${CLOUD_COMMAND_EXIT_CODE}"
+  ERROR "Command output:"
+  ERROR "${CLOUD_COMMAND_OUTPUT}"
+  ERROR "----"
+  ERROR "Environment variables:"
+  ERROR "  PROVISIONER_SERVER: ${PROVISIONER_SERVER}"
+  ERROR "  INSTALLATION_DNS: ${INSTALLATION_DNS}"
+  ERROR "  MM_VERSION: ${MM_VERSION}"
+  ERROR "  INSTALLATION_SIZE: ${INSTALLATION_SIZE}"
+  ERROR "  INSTALLATION_OWNER: ${INSTALLATION_OWNER}"
   exit ${CLOUD_COMMAND_EXIT_CODE}
 fi
 
-INSTALLATION_ID=$(echo "${CLOUD_COMMAND_OUTPUT}" | jq --raw-output .ID)
-INSTALLATION_STATE=$(echo "${CLOUD_COMMAND_OUTPUT}" | jq --raw-output .State)
-INFO "Cloud installation ${INSTALLATION_ID} requested ... "
+INFO "Command completed successfully. Output:"
+INFO "${CLOUD_COMMAND_OUTPUT}"
+
+INFO "Parsing installation details from output..."
+INSTALLATION_ID=$(echo "${CLOUD_COMMAND_OUTPUT}" | jq --raw-output .ID 2>&1)
+JQ_ID_EXIT_CODE=$?
+if [[ ${JQ_ID_EXIT_CODE} -ne 0 ]] ; then
+  ERROR "Failed to parse installation ID from output using jq"
+  ERROR "jq exit code: ${JQ_ID_EXIT_CODE}"
+  ERROR "jq output: ${INSTALLATION_ID}"
+  ERROR "Raw output was: ${CLOUD_COMMAND_OUTPUT}"
+  exit 1
+fi
+
+INSTALLATION_STATE=$(echo "${CLOUD_COMMAND_OUTPUT}" | jq --raw-output .State 2>&1)
+JQ_STATE_EXIT_CODE=$?
+if [[ ${JQ_STATE_EXIT_CODE} -ne 0 ]] ; then
+  ERROR "Failed to parse installation state from output using jq"
+  ERROR "jq exit code: ${JQ_STATE_EXIT_CODE}"
+  ERROR "jq output: ${INSTALLATION_STATE}"
+  ERROR "Raw output was: ${CLOUD_COMMAND_OUTPUT}"
+  exit 1
+fi
+
+INFO "Cloud installation ${INSTALLATION_ID} requested with state: ${INSTALLATION_STATE}"
 
 INFO "Generating Outputs"
 echo "id=${INSTALLATION_ID}" >> ${GITHUB_OUTPUT}
