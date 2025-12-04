@@ -6,9 +6,26 @@ set -o pipefail
 
 source ${GITHUB_ACTION_PATH}/log.sh
 
+INFO "Fetching provisioner token..."
+TOKEN_RESPONSE=$(curl --silent --location "${PROVISIONER_TOKEN_URL}" \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --data-urlencode 'grant_type=client_credentials' \
+  --data-urlencode "client_id=${PROVISIONER_CLIENT_ID}" \
+  --data-urlencode "client_secret=${PROVISIONER_CLIENT_SECRET}" \
+  --data-urlencode 'scope=offline_access api://provisioner/.default')
+
+TOKEN=$(echo "${TOKEN_RESPONSE}" | jq --raw-output .access_token)
+if [ -z "${TOKEN}" ] || [ "${TOKEN}" == "null" ]; then
+  ERROR "Failed to retrieve provisioner token"
+  ERROR "Response: ${TOKEN_RESPONSE}"
+  exit 1
+fi
+INFO "Successfully retrieved provisioner token"
+
 INFO Constructing cloud command ...
 CMD=("cloud installation create")
 CMD_ARGS=("--server \"${PROVISIONER_SERVER}\"")
+CMD_ARGS+=("--header \"Authorization=Bearer ${TOKEN}\"")
 
 if [ -n "${PROVISIONER_HEADERS}" ]; then
   while IFS= read -r header; do

@@ -9,6 +9,15 @@ inputs:
   server:
     description: The provisioning server whose API will be queried.
     required: true
+  provisioner-token-url:
+    description: The token URL for authentication with the provisioner.
+    required: true
+  provisioner-client-id:
+    description: The client ID for authentication with the provisioner.
+    required: true
+  provisioner-client-secret:
+    description: The client secret for authentication with the provisioner.
+    required: true
   username:
     description: The installation system admin username
     required: true
@@ -109,6 +118,9 @@ runs:
     - name: create-cloud-installation
       id: installation
       env:
+        PROVISIONER_TOKEN_URL: ${{ inputs.provisioner-token-url }}
+        PROVISIONER_CLIENT_ID: ${{ inputs.provisioner-client-id }}
+        PROVISIONER_CLIENT_SECRET: ${{ inputs.provisioner-client-secret }}
         PROVISIONER_SERVER: ${{ inputs.server }}
         PROVISIONER_HEADERS: ${{ inputs.headers }}
         INSTALLATION_DNS: ${{ inputs.name }}.test.mattermost.cloud
@@ -131,6 +143,9 @@ runs:
     - name: wait-for-installation-readiness
       id: cluster-installation
       env:
+        PROVISIONER_TOKEN_URL: ${{ inputs.provisioner-token-url }}
+        PROVISIONER_CLIENT_ID: ${{ inputs.provisioner-client-id }}
+        PROVISIONER_CLIENT_SECRET: ${{ inputs.provisioner-client-secret }}
         PROVISIONER_SERVER: ${{ inputs.server }}
         PROVISIONER_HEADERS: ${{ inputs.headers }}
         INSTALLATION_ID: ${{ steps.installation.outputs.id }}
@@ -141,6 +156,9 @@ runs:
     - name: initiate-installation
       id: state
       env:
+        PROVISIONER_TOKEN_URL: ${{ inputs.provisioner-token-url }}
+        PROVISIONER_CLIENT_ID: ${{ inputs.provisioner-client-id }}
+        PROVISIONER_CLIENT_SECRET: ${{ inputs.provisioner-client-secret }}
         PROVISIONER_SERVER: ${{ inputs.server }}
         PROVISIONER_HEADERS: ${{ inputs.headers }}
         CLUSTER_INSTALLATION_ID: ${{ steps.cluster-installation.outputs.id }}
