@@ -6,6 +6,22 @@ set -o pipefail
 
 source ${GITHUB_ACTION_PATH}/log.sh
 
+INFO "Fetching Azure AD token..."
+TOKEN_RESPONSE=$(curl --silent --location "${AZURE_TOKEN_URL}" \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --data-urlencode 'grant_type=client_credentials' \
+  --data-urlencode "client_id=${AZURE_CLIENT_ID}" \
+  --data-urlencode "client_secret=${AZURE_CLIENT_SECRET}" \
+  --data-urlencode 'scope=offline_access api://provisioner/.default')
+
+TOKEN=$(echo "${TOKEN_RESPONSE}" | jq --raw-output .access_token)
+if [ -z "${TOKEN}" ] || [ "${TOKEN}" == "null" ]; then
+  ERROR "Failed to retrieve Azure AD token"
+  ERROR "Response: ${TOKEN_RESPONSE}"
+  exit 1
+fi
+INFO "Successfully retrieved Azure AD token"
+
 DESIRED_STATE="stable" 
 BACKOFF_SECONDS=10
 TIMEOUT_SECONDS=300
@@ -14,6 +30,7 @@ INFO Constructing cloud command ...
 
 CMD=("cloud installation get")
 CMD_ARGS=("--server \"${PROVISIONER_SERVER}\"")
+CMD_ARGS+=("--header \"Authorization=Bearer ${TOKEN}\"")
 
 if [ -n "${PROVISIONER_HEADERS}" ]; then
   while IFS= read -r header; do
@@ -59,6 +76,7 @@ OK "Cloud installation ${INSTALLATION_ID} is ready"
 INFO "Generating Outputs"
 CMD=("cloud cluster installation list")
 CMD_ARGS=("--server ${PROVISIONER_SERVER}")
+CMD_ARGS+=("--header \"Authorization=Bearer ${TOKEN}\"")
 
 if [ -n "${PROVISIONER_HEADERS}" ]; then
   while IFS= read -r header; do

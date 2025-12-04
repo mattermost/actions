@@ -9,6 +9,15 @@ inputs:
   server:
     description: The provisioning server whose API will be queried.
     required: true
+  azure-token-url:
+    description: The Azure AD token URL for authentication with the provisioner.
+    required: true
+  azure-client-id:
+    description: The Azure AD client ID for authentication with the provisioner.
+    required: true
+  azure-client-secret:
+    description: The Azure AD client secret for authentication with the provisioner.
+    required: true
   username:
     description: The installation system admin username
     required: true
@@ -109,6 +118,9 @@ runs:
     - name: create-cloud-installation
       id: installation
       env:
+        AZURE_TOKEN_URL: ${{ inputs.azure-token-url }}
+        AZURE_CLIENT_ID: ${{ inputs.azure-client-id }}
+        AZURE_CLIENT_SECRET: ${{ inputs.azure-client-secret }}
         PROVISIONER_SERVER: ${{ inputs.server }}
         PROVISIONER_HEADERS: ${{ inputs.headers }}
         INSTALLATION_DNS: ${{ inputs.name }}.test.mattermost.cloud
@@ -131,6 +143,9 @@ runs:
     - name: wait-for-installation-readiness
       id: cluster-installation
       env:
+        AZURE_TOKEN_URL: ${{ inputs.azure-token-url }}
+        AZURE_CLIENT_ID: ${{ inputs.azure-client-id }}
+        AZURE_CLIENT_SECRET: ${{ inputs.azure-client-secret }}
         PROVISIONER_SERVER: ${{ inputs.server }}
         PROVISIONER_HEADERS: ${{ inputs.headers }}
         INSTALLATION_ID: ${{ steps.installation.outputs.id }}
@@ -141,6 +156,9 @@ runs:
     - name: initiate-installation
       id: state
       env:
+        AZURE_TOKEN_URL: ${{ inputs.azure-token-url }}
+        AZURE_CLIENT_ID: ${{ inputs.azure-client-id }}
+        AZURE_CLIENT_SECRET: ${{ inputs.azure-client-secret }}
         PROVISIONER_SERVER: ${{ inputs.server }}
         PROVISIONER_HEADERS: ${{ inputs.headers }}
         CLUSTER_INSTALLATION_ID: ${{ steps.cluster-installation.outputs.id }}
