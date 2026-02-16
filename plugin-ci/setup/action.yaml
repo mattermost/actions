@@ -8,16 +8,16 @@ description: |
   directory, this file will be used to determine what version of node to install for CI.
 
 inputs:
+  go-version-file:
+    default: go.mod
+    description: |
+      Path to the file that declares the Go version
+    required: false
+
   golangci-lint-version:
     default: v1.52.2
     description: |
       The version to use for golangci-lint
-    required: false
-
-  golang-version:
-    default: "1.21"
-    description: |
-      Set the version for Golang
     required: false
 
 runs:
@@ -44,7 +44,7 @@ runs:
     - name: setup-go
       uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
       with:
-        go-version: ${{ inputs.golang-version }}
+        go-version-file: ${{ inputs.go-version-file }}
 
     - name: install-golangci-lint
       shell: bash
