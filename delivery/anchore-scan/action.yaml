@@ -44,7 +44,7 @@ runs:
   steps:
     - name: Configure Tailscale
       if: ${{ inputs.use_tailscale == 'true' }}
-      uses: tailscale/github-action@dea278bd44bcef18a8d421f079a1f1f50171ed63 # v3
+      uses: tailscale/github-action@564fe381c8a09ced277dfc55386a7a00ff064b73 # v3
       with:
         version: latest
         oauth-client-id: ${{ inputs.ts_oauth_client_id }}
