@@ -25,6 +25,16 @@ inputs:
     description: 'Whether to use Tailscale for network connectivity'
     required: false
     default: 'true'
+  registry:
+    description: 'Container registry host (e.g. docker.io). Used for login and for Anchore to pull with auth. Required when registry_username is set.'
+    required: false
+    default: 'docker.io'
+  registry_username:
+    description: 'Username for container registry (e.g. Docker Hub). When set with registry_password, runner logs in before pull and Anchore uses credentials for backend pulls (avoids rate limits).'
+    required: false
+  registry_password:
+    description: 'Password or token for container registry (e.g. DOCKERHUB_TOKEN). Pass via secrets.'
+    required: false
   ts_oauth_client_id:
     description: 'Tailscale OAuth client ID'
     required: false
@@ -78,6 +88,28 @@ runs:
         echo "ANCHORECTL_ACCOUNT=saml" >> $GITHUB_ENV
         # TODO: Remove this line once TLS certificate issue is resolved
         echo "ANCHORECTL_HTTP_TLS_INSECURE=true" >> $GITHUB_ENV
+
+    - name: Add registry credentials to Anchore
+      shell: bash
+      if: ${{ inputs.registry != '' && inputs.registry_username != '' }}
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REGISTRY_USERNAME: ${{ inputs.registry_username }}
+        ANCHORECTL_REGISTRY_PASSWORD: ${{ inputs.registry_password }}
+      run: |
+        echo "Registering container registry with Anchore so backend pulls use authentication..."
+        if ! anchorectl registry add "${REGISTRY}" --username "${REGISTRY_USERNAME}"; then
+          echo "Registry may already exist, updating credentials..."
+          anchorectl registry update "${REGISTRY}" --username "${REGISTRY_USERNAME}" || true
+        fi
+
+    - name: Login to container registry
+      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+      if: ${{ inputs.registry != '' && inputs.registry_username != '' }}
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.registry_username }}
+        password: ${{ inputs.registry_password }}
 
     - name: Pull Docker image
       shell: bash
