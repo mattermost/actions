@@ -15,12 +15,34 @@ runs:
     - name: generate-release-notes
       shell: bash
       run: |
-        printf "Supported Mattermost Server Versions: **$(cat plugin.json | jq .min_server_version -r)+** \n## Enhancements\n\n## Fixes\n"  >> dist/release-notes.md
-        if [[ $(git tag -l | wc -l) -eq 1 ]]; then
-          git log --pretty='format:- %h %s' --abbrev-commit --no-decorate --no-color $(git rev-list --max-parents=0 HEAD) HEAD >> dist/release-notes.md
+        printf "Supported Mattermost Server Versions: **$(cat plugin.json | jq .min_server_version -r)+** \n## Enhancements\n\n## Fixes\n" >> dist/release-notes.md
+        CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+        if [[ -z $CURRENT_TAG ]]; then
+          # No tags exist —> include the entire commit history
+          RANGE="$(git rev-list --max-parents=0 HEAD) HEAD"
+        elif [[ $CURRENT_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          FULL_RELEASE_COUNT=$(git tag -l 'v*' | grep -cE '^v[0-9]+\.[0-9]+\.[0-9]+$')
+          if [[ $FULL_RELEASE_COUNT -le 1 ]]; then
+            # First-ever full release —> include the entire commit history
+            RANGE="$(git rev-list --max-parents=0 HEAD) HEAD"
+          else
+            # More than one full release exists —> range spans back to the previous full release
+            PREV_FULL_RELEASE=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V -r | sed -n '2p')
+            RANGE="${PREV_FULL_RELEASE}..HEAD"
+          fi
         else
-          git log --pretty='format:- %h %s' --abbrev-commit --no-decorate --no-color $(git describe --tags --abbrev=0 $(git describe --tags --abbrev=0)^)..HEAD >> dist/release-notes.md
+          # Pre-release tag (e.g. v1.2.3-rc1) — range spans only to the immediately
+          # previous tag, so each RC shows just its incremental changes
+          if [[ $(git tag -l | wc -l) -eq 1 ]]; then
+            # Only one tag exists —> include the entire commit history
+            RANGE="$(git rev-list --max-parents=0 HEAD) HEAD"
+          else
+            PREV_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^)
+            RANGE="${PREV_TAG}..HEAD"
+          fi
         fi
+        git log --pretty='format:- %h %s' --abbrev-commit --no-decorate --no-color ${RANGE} >> dist/release-notes.md
 
     - name: upload-plugin-package
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
