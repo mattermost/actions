@@ -54,7 +54,7 @@ runs:
   steps:
     - name: Configure Tailscale
       if: ${{ inputs.use_tailscale == 'true' }}
-      uses: tailscale/github-action@dea278bd44bcef18a8d421f079a1f1f50171ed63 # v3
+      uses: tailscale/github-action@bf966a7abaf9a115fd59fc23685e3e7a1b04a6be # v3
       with:
         version: latest
         oauth-client-id: ${{ inputs.ts_oauth_client_id }}
@@ -104,7 +104,7 @@ runs:
         fi
 
     - name: Login to container registry
-      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       if: ${{ inputs.registry != '' && inputs.registry_username != '' }}
       with:
         registry: ${{ inputs.registry }}
