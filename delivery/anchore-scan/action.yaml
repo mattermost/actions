@@ -65,7 +65,7 @@ runs:
     - name: Install Anchore CLI
       shell: bash
       env:
-        ANCHORECTL_VERSION: "5.21.0"
+        ANCHORECTL_VERSION: "5.24.2"
       run: |
         echo "Installing anchorectl CLI version ${ANCHORECTL_VERSION}..."
         # Install to a user-writable location for runners without root permissions
