@@ -1,0 +1,34 @@
+# Copyright 2026 Mattermost, Inc.
+name: "plugin-ci/build-fips"
+description: |
+  Build and verify the FIPS Linux/amd64 variant of a Mattermost plugin.
+
+  Requires:
+  - The plugin opts in by shipping `build/fips.mk` (see PR 1 in the FIPS
+    automation rollout).
+  - The calling job grants `id-token: write` permissions so setup-chainctl
+    can authenticate to cgr.dev via OIDC.
+
+  The caller is responsible for uploading `dist-fips/*.tar.gz` as an
+  artifact — artifact shape decisions live at the workflow level.
+
+inputs:
+  chainguard-identity:
+    description: "Chainguard identity ID to authenticate against cgr.dev."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: chainctl/auth
+      uses: chainguard-dev/setup-chainctl@67a753db49c7e97fed4c76fbe809b1339b11facf
+      with:
+        identity: ${{ inputs.chainguard-identity }}
+
+    - name: build-fips
+      shell: bash
+      run: make dist-fips
+
+    - name: verify-fips
+      shell: bash
+      run: make verify-fips
